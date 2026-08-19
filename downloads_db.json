@@ -712,9 +712,42 @@
     ],
     "speed": 0,
     "eta": 0,
-    "lastBytes": 168111,
+    "lastBytes": 184761,
     "createdAt": "2026-08-19T10:24:26.326Z",
     "completedAt": "2026-08-19T10:24:28.834Z",
+    "error": null
+  },
+  {
+    "id": "bc4754f2c9da6bc4",
+    "url": "https://www.linkedin.com/feed/update/urn:li:activity:7490443995035320320/",
+    "filename": "urn_li_activity_7490443995035320320 (1)",
+    "savePath": "C:\\Users\\DELL\\Downloads\\urn_li_activity_7490443995035320320 (1)",
+    "totalBytes": 184762,
+    "downloadedBytes": 184762,
+    "status": "completed",
+    "threads": 1,
+    "acceptRanges": false,
+    "contentType": "text/html; charset=utf-8",
+    "category": "video",
+    "isVideoStream": false,
+    "videoFormat": "bestvideo[height<=360]+bestaudio/best[height<=360]/best",
+    "isAudio": false,
+    "thumbnail": null,
+    "chunks": [
+      {
+        "id": 0,
+        "start": 0,
+        "end": 184860,
+        "total": 184861,
+        "downloaded": 184762,
+        "status": "pending"
+      }
+    ],
+    "speed": 0,
+    "eta": 0,
+    "lastBytes": 33079,
+    "createdAt": "2026-08-19T10:33:26.280Z",
+    "completedAt": "2026-08-19T10:33:27.494Z",
     "error": null
   }
 ]
