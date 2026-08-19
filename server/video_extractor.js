@@ -14,7 +14,9 @@ class VideoExtractor {
             'youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com',
             'facebook.com', 'fb.watch', 'instagram.com', 'tiktok.com',
             'twitter.com', 'x.com', 'twitch.tv', 'bilibili.com',
-            'soundcloud.com', 'm3u8', '.mpd'
+            'soundcloud.com', 'linkedin.com', 'licdn.com', 'threads.net',
+            'reddit.com', 'pinterest.com', 'snapchat.com', 'rumble.com',
+            'streamable.com', 'loom.com', 'bitchute.com', 'm3u8', '.mpd'
         ];
         return videoDomains.some(d => url.toLowerCase().includes(d));
     }

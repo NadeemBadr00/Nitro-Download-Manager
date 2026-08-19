@@ -125,7 +125,7 @@
         // 2. Helper to find video link inside an element container
         const findLinkInContainer = (container) => {
             if (!container) return null;
-            const link = container.querySelector('a[href*="/reel/"], a[href*="/watch"], a[href*="/videos/"], a[href*="fb.watch"], a[href*="/shorts/"], a[href*="/video/"], a[href*="/status/"], a[href*="/p/"]');
+            const link = container.querySelector('a[href*="/reel/"], a[href*="/watch"], a[href*="/videos/"], a[href*="fb.watch"], a[href*="/shorts/"], a[href*="/video/"], a[href*="/status/"], a[href*="/p/"], a[href*="/feed/update/urn:li:activity:"], a[href*="/posts/"]');
             if (link && link.href) {
                 // Strip tracking params for clean yt-dlp handling
                 try {
@@ -134,11 +134,22 @@
                         const match = u.pathname.match(/\/reel\/(\d+)/);
                         if (match) return `https://www.facebook.com/reel/${match[1]}`;
                     }
+                    if (u.hostname.includes('linkedin.com') && u.pathname.includes('/feed/update/urn:li:activity:')) {
+                        return u.origin + u.pathname;
+                    }
                     return link.href;
                 } catch (_) {
                     return link.href;
                 }
             }
+
+            // LinkedIn data-urn attribute on post card
+            const urnEl = container.closest('[data-urn*="urn:li:activity:"], [data-id*="urn:li:activity:"]');
+            if (urnEl) {
+                const urn = urnEl.getAttribute('data-urn') || urnEl.getAttribute('data-id');
+                if (urn) return `https://www.linkedin.com/feed/update/${urn}/`;
+            }
+
             return null;
         };
 
@@ -320,7 +331,17 @@
 
     function checkVideosOnPage() {
         if (!isFloatingBtnEnabled) return;
-        const hasVideo = document.querySelector('video') || window.location.host.includes('youtube.com') || window.location.host.includes('facebook.com');
+        const host = window.location.host.toLowerCase();
+        const hasVideo = document.querySelector('video') || 
+            host.includes('youtube.com') || 
+            host.includes('facebook.com') || 
+            host.includes('linkedin.com') || 
+            host.includes('tiktok.com') || 
+            host.includes('instagram.com') || 
+            host.includes('twitter.com') || 
+            host.includes('x.com') || 
+            host.includes('reddit.com');
+
         if (hasVideo) {
             createFloatingButton();
         }

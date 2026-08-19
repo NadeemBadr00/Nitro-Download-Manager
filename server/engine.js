@@ -159,6 +159,64 @@ class DownloadEngine extends EventEmitter {
         }
     }
 
+    static getExtensionFromMime(mime = '') {
+        if (!mime) return '';
+        const cleanMime = mime.split(';')[0].trim().toLowerCase();
+        const mimeMap = {
+            'video/mp4': '.mp4',
+            'video/webm': '.webm',
+            'video/x-matroska': '.mkv',
+            'video/quicktime': '.mov',
+            'video/x-msvideo': '.avi',
+            'video/x-flv': '.flv',
+            'audio/mpeg': '.mp3',
+            'audio/mp3': '.mp3',
+            'audio/wav': '.wav',
+            'audio/flac': '.flac',
+            'audio/aac': '.aac',
+            'audio/ogg': '.ogg',
+            'audio/mp4': '.m4a',
+            'application/zip': '.zip',
+            'application/x-zip-compressed': '.zip',
+            'application/x-rar-compressed': '.rar',
+            'application/x-7z-compressed': '.7z',
+            'application/x-tar': '.tar',
+            'application/gzip': '.gz',
+            'application/pdf': '.pdf',
+            'application/msword': '.doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+            'application/vnd.ms-excel': '.xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+            'application/vnd.ms-powerpoint': '.ppt',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+            'application/vnd.android.package-archive': '.apk',
+            'application/x-msdownload': '.exe',
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+            'image/svg+xml': '.svg'
+        };
+        return mimeMap[cleanMime] || '';
+    }
+
+    static ensureExtension(filename, contentType = '', category = '') {
+        if (!filename) filename = 'download_file';
+        let ext = path.extname(filename);
+        if (ext && ext.length > 1) return filename;
+
+        const mimeExt = DownloadEngine.getExtensionFromMime(contentType);
+        if (mimeExt) return `${filename}${mimeExt}`;
+
+        if (category === 'video' || (contentType && contentType.startsWith('video/'))) return `${filename}.mp4`;
+        if (category === 'audio' || (contentType && contentType.startsWith('audio/'))) return `${filename}.mp3`;
+        if (category === 'compressed') return `${filename}.zip`;
+        if (category === 'programs') return `${filename}.exe`;
+        if (category === 'documents') return `${filename}.pdf`;
+
+        return filename;
+    }
+
     static categorize(filename, mime = '') {
         const ext = path.extname(filename).toLowerCase().replace('.', '');
         const categories = {
@@ -255,6 +313,8 @@ class DownloadEngine extends EventEmitter {
                 }
 
                 filename = filename.replace(/[<>:"/\\|?*]/g, '_');
+                const cat = DownloadEngine.categorize(filename, contentType);
+                filename = DownloadEngine.ensureExtension(filename, contentType, cat);
 
                 resolve({
                     url: rawUrl,
@@ -264,7 +324,7 @@ class DownloadEngine extends EventEmitter {
                     totalBytes: contentLength,
                     acceptRanges,
                     contentType,
-                    category: DownloadEngine.categorize(filename, contentType)
+                    category: cat
                 });
             });
 
@@ -301,6 +361,8 @@ class DownloadEngine extends EventEmitter {
                 let filename = path.basename(parsedUrl.pathname) || 'download_file';
                 filename = filename.replace(/[<>:"/\\|?*]/g, '_');
                 const contentType = res.headers['content-type'] || 'application/octet-stream';
+                const cat = DownloadEngine.categorize(filename, contentType);
+                filename = DownloadEngine.ensureExtension(filename, contentType, cat);
 
                 req.destroy();
 
@@ -312,7 +374,7 @@ class DownloadEngine extends EventEmitter {
                     totalBytes,
                     acceptRanges: isPartial,
                     contentType,
-                    category: DownloadEngine.categorize(filename, contentType)
+                    category: cat
                 });
             });
 
@@ -327,7 +389,11 @@ class DownloadEngine extends EventEmitter {
         const taskId = crypto.randomBytes(8).toString('hex');
         
         // Auto-increment filename if duplicate already exists on disk
-        const rawFilename = filename || probe.filename;
+        const rawFilename = DownloadEngine.ensureExtension(
+            filename || probe.filename, 
+            probe.contentType, 
+            category || probe.category
+        );
         const uniqueFilename = DownloadEngine.getUniqueFilename(this.downloadDir, rawFilename);
         const savePath = path.join(this.downloadDir, uniqueFilename);
 

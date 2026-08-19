@@ -646,9 +646,75 @@
     ],
     "speed": 0,
     "eta": 0,
-    "lastBytes": 0,
+    "lastBytes": 1034821,
     "createdAt": "2026-08-19T06:34:14.224Z",
     "completedAt": "2026-08-19T06:34:16.595Z",
+    "error": null
+  },
+  {
+    "id": "475e6d213c831168",
+    "url": "https://www.facebook.com/groups/644416573754487",
+    "filename": "644416573754487",
+    "savePath": "C:\\Users\\DELL\\Downloads\\644416573754487",
+    "totalBytes": 0,
+    "downloadedBytes": 0,
+    "status": "error",
+    "threads": 16,
+    "acceptRanges": false,
+    "contentType": "text/html; charset=\"utf-8\"",
+    "category": "video",
+    "isVideoStream": true,
+    "videoFormat": "best",
+    "isAudio": false,
+    "thumbnail": null,
+    "chunks": [
+      {
+        "id": 0,
+        "start": 0,
+        "end": 0,
+        "total": 0,
+        "downloaded": 0,
+        "status": "pending"
+      }
+    ],
+    "speed": 0,
+    "eta": 0,
+    "lastBytes": 0,
+    "createdAt": "2026-08-19T08:42:47.839Z",
+    "completedAt": null,
+    "error": "yt-dlp exited with code 1"
+  },
+  {
+    "id": "a23aeba951fedc63",
+    "url": "https://www.linkedin.com/feed/update/urn:li:activity:7490443995035320320/",
+    "filename": "urn_li_activity_7490443995035320320",
+    "savePath": "C:\\Users\\DELL\\Downloads\\urn_li_activity_7490443995035320320",
+    "totalBytes": 184761,
+    "downloadedBytes": 184761,
+    "status": "completed",
+    "threads": 1,
+    "acceptRanges": false,
+    "contentType": "text/html; charset=utf-8",
+    "category": "video",
+    "isVideoStream": false,
+    "videoFormat": "bestvideo[height<=360]+bestaudio/best[height<=360]/best",
+    "isAudio": false,
+    "thumbnail": null,
+    "chunks": [
+      {
+        "id": 0,
+        "start": 0,
+        "end": 184860,
+        "total": 184861,
+        "downloaded": 184761,
+        "status": "pending"
+      }
+    ],
+    "speed": 0,
+    "eta": 0,
+    "lastBytes": 168111,
+    "createdAt": "2026-08-19T10:24:26.326Z",
+    "completedAt": "2026-08-19T10:24:28.834Z",
     "error": null
   }
 ]
