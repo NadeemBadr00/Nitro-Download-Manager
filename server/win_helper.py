@@ -1,62 +1,56 @@
 import os
 import sys
-import subprocess
 import ctypes
-from ctypes import wintypes
 
 sys.stdout.reconfigure(encoding='utf-8')
 
 def show_in_folder(target_path):
     target_path = os.path.abspath(target_path)
-    print(f"[win_helper] show_in_folder requested for: {target_path}")
+    print(f"[win_helper] show_in_folder: {target_path}")
 
-    parent_dir = os.path.dirname(target_path) if os.path.isfile(target_path) else target_path
-    if not os.path.exists(parent_dir):
-        parent_dir = os.path.join(os.environ.get('USERPROFILE', 'C:\\Users\\DELL'), 'Downloads')
+    # Determine directory to open
+    if os.path.isdir(target_path):
+        target_dir = target_path
+    else:
+        target_dir = os.path.dirname(target_path)
 
-    # Step 1: Try explorer /select,"<target_path>"
-    selected = False
-    if os.path.isfile(target_path):
-        try:
-            print(f"[win_helper] Running: explorer.exe /select,\"{target_path}\"")
-            subprocess.Popen(f'explorer.exe /select,"{target_path}"', shell=True)
-            selected = True
-        except Exception as e:
-            print(f"[win_helper] /select failed: {e}")
+    if not os.path.exists(target_dir):
+        target_dir = os.path.join(os.environ.get('USERPROFILE', 'C:\\Users\\DELL'), 'Downloads')
 
-    # Step 2: Ensure the folder is opened in foreground using os.startfile
+    print(f"[win_helper] Opening folder via os.startfile: {target_dir}")
     try:
-        print(f"[win_helper] Opening folder in foreground: {parent_dir}")
-        os.startfile(parent_dir)
+        os.startfile(target_dir)
+        print("[win_helper] os.startfile succeeded")
+        return True
     except Exception as e:
         print(f"[win_helper] os.startfile failed: {e}")
         try:
-            subprocess.Popen(['explorer.exe', parent_dir])
+            ret = ctypes.windll.shell32.ShellExecuteW(None, "open", target_dir, None, None, 1)
+            return ret > 32
         except Exception as e2:
-            print(f"[win_helper] fallback explorer failed: {e2}")
-
-    return True
+            print(f"[win_helper] ShellExecuteW failed: {e2}")
+            return False
 
 def open_file(target_path):
     target_path = os.path.abspath(target_path)
-    print(f"[win_helper] open_file requested for: {target_path}")
+    print(f"[win_helper] open_file: {target_path}")
 
     if not os.path.exists(target_path):
-        print(f"[win_helper] Error: File does not exist: {target_path}")
+        print(f"[win_helper] File not found: {target_path}")
         return False
 
+    print(f"[win_helper] Launching file via os.startfile: {target_path}")
     try:
-        print(f"[win_helper] Launching file via os.startfile: {target_path}")
         os.startfile(target_path)
+        print("[win_helper] os.startfile succeeded")
         return True
     except Exception as e:
-        print(f"[win_helper] os.startfile error: {e}")
+        print(f"[win_helper] os.startfile failed: {e}")
         try:
-            # Fallback to ShellExecuteW
             ret = ctypes.windll.shell32.ShellExecuteW(None, "open", target_path, None, None, 1)
             return ret > 32
         except Exception as e2:
-            print(f"[win_helper] ShellExecuteW fallback error: {e2}")
+            print(f"[win_helper] ShellExecuteW failed: {e2}")
             return False
 
 if __name__ == '__main__':
