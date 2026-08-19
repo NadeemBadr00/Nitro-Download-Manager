@@ -26,6 +26,13 @@ class DownloadEngine extends EventEmitter {
         this.tasks = new Map();
         this.activeWorkers = new Map();
         this.maxConcurrentDownloads = options.maxConcurrentDownloads || 3;
+        this.speedLimit = 0; // 0 = unlimited, in bytes/s
+        this.scheduler = {
+            enabled: false,
+            startAt: null,
+            autoShutdown: false,
+            shutdownArmed: false
+        };
         
         if (!fs.existsSync(this.downloadDir)) {
             fs.mkdirSync(this.downloadDir, { recursive: true });
@@ -33,6 +40,85 @@ class DownloadEngine extends EventEmitter {
 
         this.loadTasks();
         this.startSpeedTicker();
+        this.startSchedulerTicker();
+    }
+
+    startSchedulerTicker() {
+        setInterval(() => {
+            // 1. Check Scheduled Start Time
+            if (this.scheduler.enabled && this.scheduler.startAt) {
+                const startTime = new Date(this.scheduler.startAt).getTime();
+                if (!isNaN(startTime) && Date.now() >= startTime) {
+                    console.log('[NDM Scheduler] Scheduled time reached! Starting all queued downloads...');
+                    this.scheduler.enabled = false;
+                    this.resumeAll();
+                    this.emit('schedulerTriggered');
+                }
+            }
+
+            // 2. Check Auto-Shutdown Condition
+            if (this.scheduler.autoShutdown && !this.scheduler.shutdownArmed) {
+                const allTasks = Array.from(this.tasks.values());
+                const active = allTasks.filter(t => t.status === 'downloading' || t.status === 'queued');
+                const completed = allTasks.filter(t => t.status === 'completed');
+
+                if (allTasks.length > 0 && completed.length > 0 && active.length === 0) {
+                    this.scheduler.shutdownArmed = true;
+                    console.log('[NDM AutoShutdown] All tasks finished! Executing Windows shutdown in 60s...');
+                    const { exec } = require('child_process');
+                    exec('shutdown /s /t 60 /c "Nitro DM completed all downloads. System shutting down in 60 seconds."');
+                    this.emit('autoShutdownArmed');
+                }
+            }
+        }, 2000);
+    }
+
+    cancelAutoShutdown() {
+        this.scheduler.autoShutdown = false;
+        this.scheduler.shutdownArmed = false;
+        const { exec } = require('child_process');
+        exec('shutdown /a');
+        console.log('[NDM AutoShutdown] Shutdown aborted by user');
+    }
+
+    setSpeedLimit(limit) {
+        this.speedLimit = Math.max(0, parseInt(limit, 10) || 0);
+        console.log(`[NDM Engine] Global speed limit updated to: ${this.speedLimit} B/s`);
+        return this.speedLimit;
+    }
+
+    setScheduler(config = {}) {
+        if (config.enabled !== undefined) this.scheduler.enabled = !!config.enabled;
+        if (config.startAt !== undefined) this.scheduler.startAt = config.startAt;
+        if (config.autoShutdown !== undefined) {
+            this.scheduler.autoShutdown = !!config.autoShutdown;
+            if (!this.scheduler.autoShutdown && this.scheduler.shutdownArmed) {
+                this.cancelAutoShutdown();
+            }
+        }
+        console.log('[NDM Engine] Scheduler configuration updated:', this.scheduler);
+        return this.scheduler;
+    }
+
+    async addBatchTasks(items = []) {
+        const results = [];
+        for (const item of items) {
+            try {
+                const task = await this.addTask({
+                    url: item.url,
+                    filename: item.filename,
+                    threads: item.threads || 16,
+                    category: item.category,
+                    format: item.format,
+                    isAudio: item.isAudio,
+                    startImmediately: item.startImmediately !== false
+                });
+                results.push({ success: true, data: task });
+            } catch (err) {
+                results.push({ success: false, error: err.message, url: item.url });
+            }
+        }
+        return results;
     }
 
     static getUniqueFilename(dir, baseFilename) {
@@ -380,6 +466,7 @@ class DownloadEngine extends EventEmitter {
             isAudio: task.isAudio,
             saveDir: this.downloadDir,
             filename: nameWithoutExt,
+            speedLimit: this.speedLimit,
             onProgress: (p) => {
                 if (workerContext.isAborted) return;
                 task.status = 'downloading';

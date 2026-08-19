@@ -53,6 +53,20 @@
         extensionInfoBtn: document.getElementById('extensionInfoBtn'),
         sniffClipboardBtn: document.getElementById('sniffClipboardBtn'),
         toastContainer: document.getElementById('toastContainer'),
+        speedLimitSelect: document.getElementById('speedLimitSelect'),
+        openSchedulerBtn: document.getElementById('openSchedulerBtn'),
+        // Scheduler Modal
+        schedulerModal: document.getElementById('schedulerModal'),
+        schedulerModalBackdrop: document.getElementById('schedulerModalBackdrop'),
+        closeSchedulerBtn: document.getElementById('closeSchedulerBtn'),
+        cancelSchedulerModalBtn: document.getElementById('cancelSchedulerModalBtn'),
+        enableScheduleCheck: document.getElementById('enableScheduleCheck'),
+        scheduleTimeWrapper: document.getElementById('scheduleTimeWrapper'),
+        scheduleTimeInput: document.getElementById('scheduleTimeInput'),
+        autoShutdownCheck: document.getElementById('autoShutdownCheck'),
+        activeShutdownWarning: document.getElementById('activeShutdownWarning'),
+        cancelShutdownBtn: document.getElementById('cancelShutdownBtn'),
+        saveSchedulerBtn: document.getElementById('saveSchedulerBtn'),
         // Modals
         addModal: document.getElementById('addModal'),
         addModalBackdrop: document.getElementById('addModalBackdrop'),
@@ -68,6 +82,11 @@
         probeCat: document.getElementById('probeCat'),
         videoQualityGroup: document.getElementById('videoQualityGroup'),
         videoQualitySelect: document.getElementById('videoQualitySelect'),
+        playlistGroup: document.getElementById('playlistGroup'),
+        playlistTitle: document.getElementById('playlistTitle'),
+        selectAllPlaylistCheck: document.getElementById('selectAllPlaylistCheck'),
+        playlistItemsList: document.getElementById('playlistItemsList'),
+        singleFilenameGroup: document.getElementById('singleFilenameGroup'),
         filenameInput: document.getElementById('filenameInput'),
         threadSelect: document.getElementById('threadSelect'),
         categorySelect: document.getElementById('categorySelect'),
@@ -679,6 +698,70 @@
         elements.pauseAllBtn.addEventListener('click', () => apiRequest('/api/downloads/pause-all', 'POST'));
         elements.clearCompletedBtn.addEventListener('click', () => apiRequest('/api/downloads/clear-completed', 'POST'));
 
+        // Speed Limiter Listener
+        elements.speedLimitSelect?.addEventListener('change', async (e) => {
+            const limit = parseInt(e.target.value, 10) || 0;
+            const res = await apiRequest('/api/settings/speed-limit', 'POST', { speedLimit: limit });
+            if (res.success) {
+                const label = limit === 0 ? 'Unlimited Speed' : `${formatBytes(limit)}/s`;
+                showActionToast(`Speed limit set to: ${label}`, '⚡');
+            }
+        });
+
+        // Scheduler Modal Handlers
+        const openSchedulerModal = async () => {
+            const res = await apiRequest('/api/settings/scheduler', 'GET');
+            if (res.success && res.data) {
+                elements.enableScheduleCheck.checked = !!res.data.enabled;
+                elements.autoShutdownCheck.checked = !!res.data.autoShutdown;
+                if (res.data.startAt) {
+                    elements.scheduleTimeInput.value = new Date(res.data.startAt).toISOString().slice(0, 16);
+                }
+                elements.scheduleTimeWrapper.style.display = res.data.enabled ? 'block' : 'none';
+                elements.activeShutdownWarning.style.display = res.data.shutdownArmed ? 'block' : 'none';
+            }
+            elements.schedulerModal.classList.add('is-open');
+        };
+
+        const closeSchedulerModal = () => {
+            elements.schedulerModal.classList.remove('is-open');
+        };
+
+        elements.openSchedulerBtn?.addEventListener('click', openSchedulerModal);
+        elements.closeSchedulerBtn?.addEventListener('click', closeSchedulerModal);
+        elements.cancelSchedulerModalBtn?.addEventListener('click', closeSchedulerModal);
+        elements.schedulerModalBackdrop?.addEventListener('click', closeSchedulerModal);
+
+        elements.enableScheduleCheck?.addEventListener('change', (e) => {
+            elements.scheduleTimeWrapper.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        elements.cancelShutdownBtn?.addEventListener('click', async () => {
+            const res = await apiRequest('/api/settings/scheduler/cancel-shutdown', 'POST');
+            if (res.success) {
+                elements.activeShutdownWarning.style.display = 'none';
+                elements.autoShutdownCheck.checked = false;
+                showActionToast('Auto-shutdown aborted!', '🛑');
+            }
+        });
+
+        elements.saveSchedulerBtn?.addEventListener('click', async () => {
+            const isEnabled = elements.enableScheduleCheck.checked;
+            const startAt = isEnabled && elements.scheduleTimeInput.value ? new Date(elements.scheduleTimeInput.value).toISOString() : null;
+            const autoShutdown = elements.autoShutdownCheck.checked;
+
+            const res = await apiRequest('/api/settings/scheduler', 'POST', {
+                enabled: isEnabled,
+                startAt,
+                autoShutdown
+            });
+
+            if (res.success) {
+                closeSchedulerModal();
+                showActionToast('Scheduler settings saved!', '⏰');
+            }
+        });
+
         const openAddModal = () => {
             elements.addModal.classList.add('is-open');
             elements.downloadUrlInput.focus();
@@ -688,7 +771,12 @@
             elements.addDownloadForm.reset();
             elements.probeResultBanner.classList.add('is-hidden');
             elements.videoQualityGroup.style.display = 'none';
+            elements.playlistGroup.style.display = 'none';
+            elements.singleFilenameGroup.style.display = 'block';
+            elements.submitAddBtn.textContent = 'Start Download';
             state.lastProbedIsVideo = false;
+            state.isPlaylistMode = false;
+            state.playlistItems = [];
         };
 
         elements.addDownloadBtn.addEventListener('click', openAddModal);
@@ -716,6 +804,22 @@
         elements.closeExtensionFooterBtn.addEventListener('click', closeExt);
         elements.extensionModalBackdrop.addEventListener('click', closeExt);
 
+        // Playlist Select All handler
+        elements.selectAllPlaylistCheck?.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            elements.playlistItemsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = checked;
+            });
+            updatePlaylistSubmitButton();
+        });
+
+        function updatePlaylistSubmitButton() {
+            if (!state.isPlaylistMode) return;
+            const checkedCount = elements.playlistItemsList.querySelectorAll('input[type="checkbox"]:checked').length;
+            elements.submitAddBtn.textContent = `Download Selected (${checkedCount} Videos)`;
+            elements.submitAddBtn.disabled = checkedCount === 0;
+        }
+
         elements.probeBtn.addEventListener('click', async () => {
             const url = elements.downloadUrlInput.value.trim();
             if (!url) return;
@@ -723,11 +827,55 @@
             elements.probeBtn.textContent = 'Probing...';
             elements.probeBtn.disabled = true;
 
+            // Check if playlist URL
+            if (url.includes('list=') || url.includes('/playlist') || url.includes('/sets/')) {
+                const playlistRes = await apiRequest('/api/video/playlist', 'POST', { url });
+                elements.probeBtn.textContent = 'Probe Link';
+                elements.probeBtn.disabled = false;
+
+                if (playlistRes.success && playlistRes.data) {
+                    state.isPlaylistMode = true;
+                    state.lastProbedIsVideo = true;
+                    state.playlistItems = playlistRes.data.videos || [];
+
+                    elements.probeResultBanner.classList.remove('is-hidden');
+                    elements.probeRanges.textContent = `📑 Playlist: ${playlistRes.data.title}`;
+                    elements.probeSize.textContent = `${playlistRes.data.count} Total Videos`;
+                    elements.probeCat.textContent = 'PLAYLIST / BATCH';
+
+                    elements.videoQualityGroup.style.display = 'flex';
+                    elements.playlistGroup.style.display = 'block';
+                    elements.singleFilenameGroup.style.display = 'none';
+                    elements.categorySelect.value = 'video';
+
+                    elements.playlistTitle.textContent = `📑 ${playlistRes.data.title} (${playlistRes.data.count} Videos)`;
+                    elements.playlistItemsList.innerHTML = state.playlistItems.map((item, idx) => `
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: hsl(0, 0%, 16%); padding: 6px 10px; border-radius: 6px; cursor: pointer;">
+                            <input type="checkbox" data-idx="${idx}" checked>
+                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${item.title}</span>
+                        </label>
+                    `).join('');
+
+                    elements.playlistItemsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        cb.addEventListener('change', updatePlaylistSubmitButton);
+                    });
+
+                    updatePlaylistSubmitButton();
+                    return;
+                }
+            }
+
             const res = await apiRequest('/api/download/probe', 'POST', { url });
             elements.probeBtn.textContent = 'Probe Link';
             elements.probeBtn.disabled = false;
 
             if (res.success && res.data) {
+                state.isPlaylistMode = false;
+                elements.playlistGroup.style.display = 'none';
+                elements.singleFilenameGroup.style.display = 'block';
+                elements.submitAddBtn.textContent = 'Start Download';
+                elements.submitAddBtn.disabled = false;
+
                 elements.probeResultBanner.classList.remove('is-hidden');
                 
                 if (res.data.isVideoStream) {
@@ -760,6 +908,45 @@
             if (!url) return;
 
             const isAudio = elements.videoQualitySelect.value === 'audio_mp3';
+            const threads = parseInt(elements.threadSelect.value, 10) || 16;
+            const startImmediately = elements.startImmediatelyCheck.checked;
+
+            // 1. Batch / Playlist Submission
+            if (state.isPlaylistMode && state.playlistItems.length > 0) {
+                const checkedBoxes = Array.from(elements.playlistItemsList.querySelectorAll('input[type="checkbox"]:checked'));
+                const selectedVideos = checkedBoxes.map(cb => state.playlistItems[parseInt(cb.dataset.idx, 10)]).filter(Boolean);
+
+                if (selectedVideos.length === 0) {
+                    alert('Please select at least one video to download.');
+                    return;
+                }
+
+                const batchItems = selectedVideos.map(v => ({
+                    url: v.url,
+                    filename: v.title,
+                    threads: threads,
+                    category: 'video',
+                    format: !isAudio ? elements.videoQualitySelect.value : undefined,
+                    isAudio: isAudio,
+                    startImmediately: startImmediately
+                }));
+
+                elements.submitAddBtn.disabled = true;
+                elements.submitAddBtn.textContent = 'Adding batch...';
+
+                const res = await apiRequest('/api/download/batch-add', 'POST', { items: batchItems });
+                if (res.success) {
+                    showActionToast(`Added ${batchItems.length} videos from playlist!`, '📑');
+                    closeAddModal();
+                    fetchTasks();
+                } else {
+                    alert('Failed to add playlist: ' + (res.error || 'Unknown error'));
+                    elements.submitAddBtn.disabled = false;
+                }
+                return;
+            }
+
+            // 2. Single Download Submission
             const payload = {
                 url,
                 filename: elements.filenameInput.value.trim() || undefined,
@@ -767,7 +954,7 @@
                 category: elements.categorySelect.value || (state.lastProbedIsVideo ? 'video' : undefined),
                 format: state.lastProbedIsVideo && !isAudio ? elements.videoQualitySelect.value : undefined,
                 isAudio: isAudio,
-                startImmediately: elements.startImmediatelyCheck.checked
+                startImmediately: startImmediately
             };
 
             const res = await apiRequest('/api/download/add', 'POST', payload);

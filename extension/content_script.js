@@ -107,6 +107,75 @@
         });
     }
 
+    function getBestVideoTargetUrl(videoEl) {
+        const currentUrl = window.location.href;
+        
+        // 1. If currently directly on a video permalink page, use it
+        if (
+            currentUrl.includes('/reel/') || 
+            currentUrl.includes('/watch') || 
+            currentUrl.includes('/shorts/') || 
+            currentUrl.includes('/video/') || 
+            currentUrl.includes('/status/') ||
+            (currentUrl.includes('/p/') && !currentUrl.includes('/explore/'))
+        ) {
+            return currentUrl;
+        }
+
+        // 2. Helper to find video link inside an element container
+        const findLinkInContainer = (container) => {
+            if (!container) return null;
+            const link = container.querySelector('a[href*="/reel/"], a[href*="/watch"], a[href*="/videos/"], a[href*="fb.watch"], a[href*="/shorts/"], a[href*="/video/"], a[href*="/status/"], a[href*="/p/"]');
+            if (link && link.href) {
+                // Strip tracking params for clean yt-dlp handling
+                try {
+                    const u = new URL(link.href);
+                    if (u.hostname.includes('facebook.com') && u.pathname.includes('/reel/')) {
+                        const match = u.pathname.match(/\/reel\/(\d+)/);
+                        if (match) return `https://www.facebook.com/reel/${match[1]}`;
+                    }
+                    return link.href;
+                } catch (_) {
+                    return link.href;
+                }
+            }
+            return null;
+        };
+
+        // 3. If a specific video element is passed, inspect its ancestors
+        if (videoEl) {
+            let curr = videoEl.parentElement;
+            while (curr && curr !== document.body) {
+                const found = findLinkInContainer(curr);
+                if (found) return found;
+                curr = curr.parentElement;
+            }
+        }
+
+        // 4. Scan all playing or visible videos on the feed
+        const allVideos = Array.from(document.querySelectorAll('video'));
+        for (const v of allVideos) {
+            const rect = v.getBoundingClientRect();
+            const isVisible = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
+            const isPlaying = !v.paused;
+
+            if (isPlaying || isVisible) {
+                let curr = v.parentElement;
+                while (curr && curr !== document.body) {
+                    const found = findLinkInContainer(curr);
+                    if (found) return found;
+                    curr = curr.parentElement;
+                }
+            }
+        }
+
+        // 5. Look for any reel/watch link in the main post area
+        const postLink = document.querySelector('[role="article"] a[href*="/reel/"], [role="article"] a[href*="/watch"], div[data-pagelet*="FeedUnit"] a[href*="/reel/"]');
+        if (postLink && postLink.href) return postLink.href;
+
+        return currentUrl;
+    }
+
     async function toggleQualityDropdown() {
         const isHidden = qualityDropdown.classList.contains('is-hidden');
         if (!isHidden) {
@@ -118,17 +187,23 @@
         const qualityList = document.getElementById('ndmQualityList');
         qualityList.innerHTML = '<div class="ndm-loading">Fetching available qualities...</div>';
 
-        const pageUrl = window.location.href;
+        // Extract the exact video permalink (e.g. https://www.facebook.com/reel/919737374511893)
+        const activeVideoEl = document.querySelector('video:hover') || document.querySelector('video');
+        const targetVideoUrl = getBestVideoTargetUrl(activeVideoEl);
+        console.log('[NDM Sniffer] Probing video URL:', targetVideoUrl);
 
         // Use background message proxy to bypass Mixed Content
-        chrome.runtime.sendMessage({ action: 'GET_VIDEO_FORMATS', url: pageUrl }, (data) => {
+        chrome.runtime.sendMessage({ action: 'GET_VIDEO_FORMATS', url: targetVideoUrl }, (data) => {
             if (chrome.runtime.lastError || !data || !data.success) {
                 qualityList.innerHTML = `
                     <div class="ndm-error">
-                        <p>⚠️ Nitro DM Server not responding on localhost:3000.</p>
-                        <small>Please ensure the Nitro DM server is running.</small>
+                        <p>⚠️ Could not fetch video stream from: <br><small style="word-break: break-all;">${targetVideoUrl}</small></p>
+                        <button class="ndm-btn-primary" style="margin-top: 8px; width: 100%;" id="ndmFallbackDownloadBtn">Download Best Quality</button>
                     </div>
                 `;
+                document.getElementById('ndmFallbackDownloadBtn')?.addEventListener('click', () => {
+                    startDownloadFromPage(targetVideoUrl, { label: 'Best Available (MP4)', format: 'bestvideo+bestaudio/best', isAudio: false });
+                });
                 return;
             }
 
@@ -154,7 +229,7 @@
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const selected = qualities[parseInt(btn.dataset.idx, 10)];
-                    startDownloadFromPage(pageUrl, selected);
+                    startDownloadFromPage(targetVideoUrl, selected);
                 });
             });
         });

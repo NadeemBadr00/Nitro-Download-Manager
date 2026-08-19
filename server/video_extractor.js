@@ -74,7 +74,62 @@ class VideoExtractor {
         });
     }
 
-    static download({ url, format, isAudio, saveDir, filename, onProgress, onComplete, onError }) {
+    static isPlaylist(url) {
+        if (!url) return false;
+        return url.includes('list=') || url.includes('/playlist') || url.includes('/sets/');
+    }
+
+    static getPlaylist(url) {
+        return new Promise((resolve, reject) => {
+            const args = [
+                '-m', 'yt_dlp',
+                '--flat-playlist',
+                '--dump-single-json',
+                url
+            ];
+
+            const child = spawn('python', args, {
+                env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            child.stdout.on('data', data => stdout += data.toString('utf-8'));
+            child.stderr.on('data', data => stderr += data.toString('utf-8'));
+
+            child.on('close', code => {
+                if (code !== 0) {
+                    return reject(new Error(stderr || 'Failed to extract playlist information'));
+                }
+
+                try {
+                    const data = JSON.parse(stdout);
+                    const title = data.title || 'Playlist';
+                    const entries = data.entries || [];
+                    const videos = entries.map(item => ({
+                        id: item.id,
+                        title: item.title || `Video ${item.id}`,
+                        url: item.url || `https://www.youtube.com/watch?v=${item.id}`,
+                        duration: item.duration || 0,
+                        thumbnail: item.thumbnails?.[0]?.url || ''
+                    }));
+
+                    resolve({
+                        title,
+                        count: videos.length,
+                        videos
+                    });
+                } catch (err) {
+                    reject(new Error('Failed to parse playlist: ' + err.message));
+                }
+            });
+
+            child.on('error', reject);
+        });
+    }
+
+    static download({ url, format, isAudio, saveDir, filename, speedLimit, onProgress, onComplete, onError }) {
         const cleanName = (filename || '%(title)s').replace(/[<>:"/\\|?*]/g, '_');
         const outTemplate = path.join(saveDir, `${cleanName}.%(ext)s`);
         
@@ -90,6 +145,12 @@ class VideoExtractor {
             '--windows-filenames',
             '-o', outTemplate
         ];
+
+        if (speedLimit && speedLimit > 0) {
+            // Convert bytes/sec to yt-dlp format (e.g. 500K, 2M)
+            const kbs = Math.round(speedLimit / 1024);
+            args.push('--limit-rate', `${kbs}K`);
+        }
 
         if (isAudio) {
             args.push('-x', '--audio-format', 'mp3', '--audio-quality', '0');

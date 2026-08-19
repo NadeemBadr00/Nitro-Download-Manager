@@ -220,6 +220,56 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, ok ? 200 : 404, { success: ok, taskId });
         }
 
+        // Video Playlist Prober
+        if (req.method === 'POST' && pathname === '/api/video/playlist') {
+            const body = await parseJsonBody(req);
+            if (!body.url) return sendJson(res, 400, { success: false, error: 'URL is required' });
+            try {
+                const playlistData = await VideoExtractor.getPlaylist(body.url);
+                return sendJson(res, 200, { success: true, data: playlistData });
+            } catch (err) {
+                return sendJson(res, 400, { success: false, error: err.message || 'Failed to extract playlist' });
+            }
+        }
+
+        // Batch Add Downloads (e.g. from Playlist or Multi-select)
+        if (req.method === 'POST' && pathname === '/api/download/batch-add') {
+            const body = await parseJsonBody(req);
+            if (!Array.isArray(body.items) || body.items.length === 0) {
+                return sendJson(res, 400, { success: false, error: 'items array is required' });
+            }
+            try {
+                const results = await engine.addBatchTasks(body.items);
+                return sendJson(res, 201, { success: true, data: results });
+            } catch (err) {
+                return sendJson(res, 400, { success: false, error: err.message || 'Failed to add batch downloads' });
+            }
+        }
+
+        // Speed Limit Settings
+        if (req.method === 'GET' && pathname === '/api/settings/speed-limit') {
+            return sendJson(res, 200, { success: true, data: { speedLimit: engine.speedLimit } });
+        }
+        if (req.method === 'POST' && pathname === '/api/settings/speed-limit') {
+            const body = await parseJsonBody(req);
+            const limit = engine.setSpeedLimit(body.speedLimit);
+            return sendJson(res, 200, { success: true, data: { speedLimit: limit } });
+        }
+
+        // Scheduler Settings
+        if (req.method === 'GET' && pathname === '/api/settings/scheduler') {
+            return sendJson(res, 200, { success: true, data: engine.scheduler });
+        }
+        if (req.method === 'POST' && pathname === '/api/settings/scheduler') {
+            const body = await parseJsonBody(req);
+            const scheduler = engine.setScheduler(body);
+            return sendJson(res, 200, { success: true, data: scheduler });
+        }
+        if (req.method === 'POST' && pathname === '/api/settings/scheduler/cancel-shutdown') {
+            engine.cancelAutoShutdown();
+            return sendJson(res, 200, { success: true, message: 'Shutdown aborted' });
+        }
+
         if (req.method === 'POST' && pathname === '/api/downloads/pause-all') {
             for (const task of engine.tasks.values()) {
                 if (task.status === 'downloading') engine.pauseTask(task.id);
@@ -250,7 +300,13 @@ const server = http.createServer(async (req, res) => {
                 'X-Accel-Buffering': 'no',
                 'Access-Control-Allow-Origin': '*'
             });
-            const initPayload = `data: ${JSON.stringify({ tasks: Array.from(engine.tasks.values()), totalSpeed: 0, activeCount: 0 })}\n\n`;
+            const initPayload = `data: ${JSON.stringify({
+                tasks: Array.from(engine.tasks.values()),
+                totalSpeed: 0,
+                activeCount: 0,
+                speedLimit: engine.speedLimit,
+                scheduler: engine.scheduler
+            })}\n\n`;
             res.write(initPayload);
             sseClients.add(res);
 

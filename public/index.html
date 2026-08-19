@@ -101,9 +101,22 @@
                     <div>
                         <h1>Download Hub <span class="subtitle-counter" id="headerSubtitle">0 active tasks</span></h1>
                     </div>
-                    <div class="header-speed-meter">
-                        <div class="speed-label">CURRENT DOWNLOAD SPEED</div>
-                        <div class="speed-value" id="globalSpeedText">0.0 KB/s</div>
+                    <div class="header-speed-controls" style="display: flex; align-items: center; gap: 16px;">
+                        <div class="header-speed-meter">
+                            <div class="speed-label">CURRENT DOWNLOAD SPEED</div>
+                            <div class="speed-value" id="globalSpeedText">0.0 KB/s</div>
+                        </div>
+                        <div class="speed-limit-box" style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 0.68rem; font-weight: 700; color: hsl(0, 0%, 55%); text-transform: uppercase; letter-spacing: 0.05em;">Speed Limiter</span>
+                            <select id="speedLimitSelect" style="background: hsl(0, 0%, 14%); border: 1px solid hsl(0, 0%, 24%); color: hsl(0, 0%, 90%); border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-family: var(--font-sans); cursor: pointer;">
+                                <option value="0">⚡ Unlimited</option>
+                                <option value="512000">🐢 500 KB/s</option>
+                                <option value="1048576">🚀 1 MB/s</option>
+                                <option value="2097152">🚀 2 MB/s</option>
+                                <option value="5242880">🚀 5 MB/s</option>
+                                <option value="10485760">🚀 10 MB/s</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="tabs" id="statusTabs">
@@ -111,6 +124,10 @@
                     <button class="tab" data-filter="downloading">Downloading</button>
                     <button class="tab" data-filter="completed">Completed</button>
                     <button class="tab" data-filter="paused">Paused</button>
+                    <button class="tab" id="openSchedulerBtn" style="margin-left: auto; color: hsl(218, 89%, 73%); display: flex; align-items: center; gap: 6px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>⏰ Scheduler & Auto-Shutdown</span>
+                    </button>
                 </div>
             </header>
 
@@ -284,7 +301,21 @@
                     </select>
                 </div>
 
-                <div class="form-group">
+                <!-- Playlist Box (Shows when Playlist URL is detected) -->
+                <div class="form-group" id="playlistGroup" style="display: none; background: hsl(0, 0%, 12%); border: 1px solid hsl(218, 89%, 40%); border-radius: 8px; padding: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <strong id="playlistTitle" style="color: hsl(218, 89%, 73%); font-size: 0.9rem;">📑 Playlist Detected</strong>
+                        <label class="checkbox-label" style="font-size: 0.8rem; cursor: pointer;">
+                            <input type="checkbox" id="selectAllPlaylistCheck" checked>
+                            <span>Select All</span>
+                        </label>
+                    </div>
+                    <div id="playlistItemsList" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;">
+                        <!-- Playlist entries injected here -->
+                    </div>
+                </div>
+
+                <div class="form-group" id="singleFilenameGroup">
                     <label for="filenameInput">Save As (Filename)</label>
                     <input type="text" id="filenameInput" placeholder="Auto-extracted from URL">
                 </div>
@@ -325,6 +356,55 @@
                     <button type="submit" class="btn btn-primary" id="submitAddBtn">Start Download</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SCHEDULER & AUTO-SHUTDOWN -->
+    <div class="modal" id="schedulerModal">
+        <div class="modal__backdrop" id="schedulerModalBackdrop"></div>
+        <div class="modal__dialog">
+            <div class="modal__header">
+                <h2>⏰ Download Scheduler & Auto-Shutdown</h2>
+                <button class="icon-button" id="closeSchedulerBtn" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal__body">
+                <div class="form-group">
+                    <label class="checkbox-label" style="font-weight: 600; color: hsl(0, 0%, 95%); margin-bottom: 8px;">
+                        <input type="checkbox" id="enableScheduleCheck">
+                        <span>⏰ Schedule Downloads to start at specific time</span>
+                    </label>
+                    <div id="scheduleTimeWrapper" style="display: none; margin-top: 8px;">
+                        <label for="scheduleTimeInput" style="font-size: 0.8rem; color: hsl(0, 0%, 70%);">Select Start Date & Time:</label>
+                        <input type="datetime-local" id="scheduleTimeInput" style="background: hsl(0, 0%, 14%); border: 1px solid hsl(0, 0%, 24%); color: hsl(0, 0%, 90%); border-radius: 6px; padding: 8px 12px; width: 100%; font-family: var(--font-sans);">
+                        <small style="color: hsl(0, 0%, 60%); display: block; margin-top: 4px;">Queued tasks will wait and start automatically at this time.</small>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid hsl(0, 0%, 20%); margin: 16px 0;">
+
+                <div class="form-group">
+                    <label class="checkbox-label" style="font-weight: 600; color: hsl(0, 0%, 95%);">
+                        <input type="checkbox" id="autoShutdownCheck">
+                        <span>⚡ Auto-Shutdown PC when all downloads finish</span>
+                    </label>
+                    <small style="color: hsl(40, 95%, 60%); display: block; margin-top: 6px; line-height: 1.4;">
+                        ⚠️ Windows will automatically shut down 60 seconds after the last download completes. You will get a 60-second warning dialog with an abort option.
+                    </small>
+                </div>
+
+                <div id="activeShutdownWarning" style="display: none; background: hsl(0, 70%, 18%); border: 1px solid hsl(0, 80%, 40%); border-radius: 6px; padding: 10px 12px; margin-top: 14px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="color: hsl(0, 90%, 75%); font-weight: 600; font-size: 0.85rem;">⚠️ System Shutdown Armed!</span>
+                        <button class="btn btn-danger btn-sm" id="cancelShutdownBtn">Abort Shutdown</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn-secondary" id="cancelSchedulerModalBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSchedulerBtn">Save Scheduler Settings</button>
+            </div>
         </div>
     </div>
 
