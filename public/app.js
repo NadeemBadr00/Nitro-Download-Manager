@@ -445,21 +445,57 @@
         elements.tableBody.innerHTML = rowsHtml;
     }
 
+    function showActionToast(message, icon = '📁') {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'download-toast';
+        toast.style.padding = '12px 16px';
+        toast.style.borderLeft = '4px solid hsl(218, 89%, 73%)';
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 600; color: hsl(0, 0%, 95%);">
+                <span style="font-size: 1.2rem;">${icon}</span>
+                <span>${message}</span>
+            </div>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('is-hiding');
+            setTimeout(() => toast.remove(), 250);
+        }, 3000);
+    }
+
     window.ndmOpenFolder = async function (taskId) {
-        console.log('[NDM UI] ndmOpenFolder called for:', taskId);
+        console.log('%c[NDM Button Click] 📁 Show in Folder clicked for task: ' + taskId, 'background: #2563eb; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
+        const task = state.tasks.find(t => t.id === taskId);
+        const fileName = task ? task.filename : 'File';
+        showActionToast(`Opening folder for: ${fileName}`, '📁');
+
         const result = await apiRequest(`/api/download/${taskId}/open-folder`, 'POST');
-        console.log('[NDM UI] ndmOpenFolder result:', result);
+        console.log('%c[NDM Server Response] 📁 Open Folder Result:', 'color: #3b82f6; font-weight: bold;', result);
         if (!result.success) {
-            console.error('[NDM UI] Open folder FAILED:', result.error);
+            console.error('[NDM Error] Open folder failed:', result.error);
+            showActionToast(`Failed to open folder: ${result.error || 'Unknown error'}`, '❌');
         }
     };
 
     window.ndmOpenFile = async function (taskId) {
-        console.log('[NDM UI] ndmOpenFile called for:', taskId);
+        console.log('%c[NDM Button Click] ▶ Play File clicked for task: ' + taskId, 'background: #10b981; color: #fff; font-size: 13px; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
+        const task = state.tasks.find(t => t.id === taskId);
+        const fileName = task ? task.filename : 'Video';
+        showActionToast(`Launching player for: ${fileName}`, '▶');
+
         const result = await apiRequest(`/api/download/${taskId}/open-file`, 'POST');
-        console.log('[NDM UI] ndmOpenFile result:', result);
+        console.log('%c[NDM Server Response] ▶ Play File Result:', 'color: #10b981; font-weight: bold;', result);
         if (!result.success) {
-            console.error('[NDM UI] Open file FAILED:', result.error);
+            console.error('[NDM Error] Play file failed:', result.error);
+            showActionToast(`Failed to play file: ${result.error || 'Unknown error'}`, '❌');
         }
     };
 
