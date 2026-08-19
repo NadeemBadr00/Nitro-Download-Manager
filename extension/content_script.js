@@ -18,6 +18,18 @@
         checkVideosOnPage();
     });
 
+    // Bridge from localhost:3000 Web UI to Extension Native APIs
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NDM_OPEN_FOLDER') {
+            console.log('[NDM Extension ContentScript] Forwarding OPEN_FOLDER to background service worker');
+            chrome.runtime.sendMessage({ action: 'OPEN_FOLDER', taskId: event.data.taskId });
+        }
+        if (event.data && event.data.type === 'NDM_OPEN_FILE') {
+            console.log('[NDM Extension ContentScript] Forwarding OPEN_FILE to background service worker');
+            chrome.runtime.sendMessage({ action: 'OPEN_FILE', taskId: event.data.taskId });
+        }
+    });
+
     // Listen for toggle updates or download completions from background service worker
     chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (msg.type === 'NDM_TOGGLE_FLOATING_BTN') {

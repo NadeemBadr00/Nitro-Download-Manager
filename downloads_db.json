@@ -613,9 +613,42 @@
     ],
     "speed": 0,
     "eta": 0,
-    "lastBytes": 0,
+    "lastBytes": 1632087,
     "createdAt": "2026-08-19T05:51:33.496Z",
     "completedAt": "2026-08-19T05:51:43.445Z",
+    "error": null
+  },
+  {
+    "id": "a02f6f1d20327f4d",
+    "url": "https://www.facebook.com/reel/919737374511893",
+    "filename": "مشهد محذوف من فيلم Avengers_ Age of Ultron (2015) بيوضح ليه كابتن أمريكا في النهاية بطل يلبس خوذته. _ Tony stark.mp4",
+    "savePath": "C:\\Users\\DELL\\Downloads\\مشهد محذوف من فيلم Avengers_ Age of Ultron (2015) بيوضح ليه كابتن أمريكا في النهاية بطل يلبس خوذته. _ Tony stark.mp4",
+    "totalBytes": 1034821,
+    "downloadedBytes": 1034821,
+    "status": "completed",
+    "threads": 16,
+    "acceptRanges": true,
+    "contentType": "video/mp4",
+    "category": "video",
+    "isVideoStream": true,
+    "videoFormat": null,
+    "isAudio": false,
+    "thumbnail": "https://scontent.fcai20-6.fna.fbcdn.net/v/t15.5256-10/778454191_4474705202769136_8027473793214862074_n.jpg?stp=dst-jpg_tt6&cstp=mx960x720&ctp=s960x720&_nc_cat=109&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=50ce42&_nc_ohc=N-BEb2rtNBIQ7kNvwG3RvsX&_nc_oc=Ado4_8KPWl5x347y8N3Q6QoQRhgRa6Pu2771DPCeKI3PTA5ykKppk54narLBmX0VYQA&_nc_zt=23&_nc_ht=scontent.fcai20-6.fna&_nc_gid=FKxTwYKxQDujzDrAFgDgKA&_nc_ss=73289&oh=00_AQFhlAozPsroyyFk0lJkWRkJ2WCrp91KFL4Qb7l2uwjuZA&oe=6A8B2472",
+    "chunks": [
+      {
+        "id": 0,
+        "start": 0,
+        "end": 0,
+        "total": 0,
+        "downloaded": 0,
+        "status": "pending"
+      }
+    ],
+    "speed": 0,
+    "eta": 0,
+    "lastBytes": 0,
+    "createdAt": "2026-08-19T06:34:14.224Z",
+    "completedAt": "2026-08-19T06:34:16.595Z",
     "error": null
   }
 ]

@@ -71,8 +71,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return false;
     }
 
-    if (msg.action === 'OPEN_FOLDER' && msg.taskId) {
-        fetch(`${NDM_SERVER}/api/download/${msg.taskId}/open-folder`, { method: 'POST' }).catch(() => {});
+    if (msg.action === 'OPEN_FOLDER') {
+        try {
+            chrome.downloads.showDefaultFolder();
+        } catch (e) {
+            console.warn('showDefaultFolder error:', e);
+        }
+        if (msg.taskId) {
+            fetch(`${NDM_SERVER}/api/download/${msg.taskId}/open-folder`, { method: 'POST' }).catch(() => {});
+        }
         sendResponse({ success: true });
         return false;
     }

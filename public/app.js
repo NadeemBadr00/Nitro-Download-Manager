@@ -477,6 +477,10 @@
         const fileName = task ? task.filename : 'File';
         showActionToast(`Opening folder for: ${fileName}`, '📁');
 
+        // 1. Send to Extension Bridge (Native Chrome Downloads Folder in foreground)
+        window.postMessage({ type: 'NDM_OPEN_FOLDER', taskId: taskId }, '*');
+
+        // 2. Call backend server
         const result = await apiRequest(`/api/download/${taskId}/open-folder`, 'POST');
         console.log('%c[NDM Server Response] 📁 Open Folder Result:', 'color: #3b82f6; font-weight: bold;', result);
         if (!result.success) {
@@ -491,6 +495,10 @@
         const fileName = task ? task.filename : 'Video';
         showActionToast(`Launching player for: ${fileName}`, '▶');
 
+        // 1. Send to Extension Bridge
+        window.postMessage({ type: 'NDM_OPEN_FILE', taskId: taskId }, '*');
+
+        // 2. Call backend server
         const result = await apiRequest(`/api/download/${taskId}/open-file`, 'POST');
         console.log('%c[NDM Server Response] ▶ Play File Result:', 'color: #10b981; font-weight: bold;', result);
         if (!result.success) {
