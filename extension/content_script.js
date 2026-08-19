@@ -12,21 +12,38 @@
     let qualityDropdown = null;
     let isFloatingBtnEnabled = true;
 
-    // Load user settings
-    chrome.storage.local.get(['showFloatingButton', 'showToastNotifications'], (res) => {
-        isFloatingBtnEnabled = res.showFloatingButton !== false;
-        checkVideosOnPage();
-    });
+    function safeSendMessage(message, callback) {
+        try {
+            if (!chrome.runtime || !chrome.runtime.id) {
+                console.warn('[NDM] Extension reloaded. Please refresh this tab to reconnect.');
+                return;
+            }
+            chrome.runtime.sendMessage(message, (res) => {
+                if (chrome.runtime.lastError) {
+                    // Silently ignore disconnected port warnings on reloaded tabs
+                }
+                if (typeof callback === 'function') callback(res);
+            });
+        } catch (_) {}
+    }
+
+    // Load user settings safely
+    try {
+        if (chrome.storage && chrome.storage.local) {
+            chrome.storage.local.get(['showFloatingButton', 'showToastNotifications'], (res) => {
+                if (res) isFloatingBtnEnabled = res.showFloatingButton !== false;
+                checkVideosOnPage();
+            });
+        }
+    } catch (_) {}
 
     // Bridge from localhost:3000 Web UI to Extension Native APIs
     window.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'NDM_OPEN_FOLDER') {
-            console.log('[NDM Extension ContentScript] Forwarding OPEN_FOLDER to background service worker');
-            chrome.runtime.sendMessage({ action: 'OPEN_FOLDER', taskId: event.data.taskId });
+            safeSendMessage({ action: 'OPEN_FOLDER', taskId: event.data.taskId });
         }
         if (event.data && event.data.type === 'NDM_OPEN_FILE') {
-            console.log('[NDM Extension ContentScript] Forwarding OPEN_FILE to background service worker');
-            chrome.runtime.sendMessage({ action: 'OPEN_FILE', taskId: event.data.taskId });
+            safeSendMessage({ action: 'OPEN_FILE', taskId: event.data.taskId });
         }
     });
 
@@ -204,8 +221,8 @@
         console.log('[NDM Sniffer] Probing video URL:', targetVideoUrl);
 
         // Use background message proxy to bypass Mixed Content
-        chrome.runtime.sendMessage({ action: 'GET_VIDEO_FORMATS', url: targetVideoUrl }, (data) => {
-            if (chrome.runtime.lastError || !data || !data.success) {
+        safeSendMessage({ action: 'GET_VIDEO_FORMATS', url: targetVideoUrl }, (data) => {
+            if (!data || !data.success) {
                 qualityList.innerHTML = `
                     <div class="ndm-error">
                         <p>⚠️ Could not fetch video stream from: <br><small style="word-break: break-all;">${targetVideoUrl}</small></p>
@@ -254,7 +271,7 @@
         });
 
         // Use background message proxy
-        chrome.runtime.sendMessage({
+        safeSendMessage({
             action: 'ADD_DOWNLOAD',
             payload: {
                 url,
@@ -317,12 +334,12 @@
         
         // Use background message proxying to trigger open-file and open-folder
         playBtn?.addEventListener('click', () => {
-            chrome.runtime.sendMessage({ action: 'OPEN_FILE', taskId: task.id });
+            safeSendMessage({ action: 'OPEN_FILE', taskId: task.id });
             dismiss();
         });
 
         folderBtn?.addEventListener('click', () => {
-            chrome.runtime.sendMessage({ action: 'OPEN_FOLDER', taskId: task.id });
+            safeSendMessage({ action: 'OPEN_FOLDER', taskId: task.id });
             dismiss();
         });
 
