@@ -1,0 +1,9 @@
+node_modules/
+downloads/
+*.log
+test_*.js
+test_*.py
+create_logo.py
+build_app.py
+.DS_Store
+Thumbs.db

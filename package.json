@@ -1,0 +1,19 @@
+{
+  "name": "nitro-download-manager",
+  "version": "1.0.0",
+  "description": "High-Performance Multi-threaded IDM Alternative with Browser Extension & Modern Dark Console",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "keywords": [
+    "download-manager",
+    "idm",
+    "multi-threading",
+    "chunked-download",
+    "aria2",
+    "turbo-download"
+  ],
+  "author": "Nadeem",
+  "license": "MIT"
+}

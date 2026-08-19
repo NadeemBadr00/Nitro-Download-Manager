@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nitro Download Manager - Console</title>
+    <link rel="icon" type="image/png" href="icon32.png">
+    <link rel="apple-touch-icon" href="icon128.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="console-shell" id="consoleShell">
+        <!-- 1. Sidebar (252px -> 68px) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon" style="padding: 0; overflow: hidden; background: transparent; border: none;">
+                        <img src="icon48.png" alt="Nitro DM Logo" style="width: 36px; height: 36px; border-radius: 8px;">
+                    </div>
+                    <span class="app-name">Nitro DM <span class="badge-pro">PRO</span></span>
+                </div>
+            </div>
+            
+            <div class="sidebar-search">
+                <div class="search-input-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="sidebarSearch" placeholder="Search downloads...">
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-filter="all">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    <span>All Downloads</span>
+                    <span class="nav-badge" id="countAll">0</span>
+                </a>
+                <a href="#" class="nav-link" data-filter="downloading">
+                    <svg class="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v12"/><path d="m19 8-7 7-7-7"/><path d="M5 21h14"/></svg>
+                    <span>Downloading</span>
+                    <span class="nav-badge nav-badge--active" id="countActive">0</span>
+                </a>
+                <a href="#" class="nav-link" data-filter="completed">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Completed</span>
+                    <span class="nav-badge" id="countCompleted">0</span>
+                </a>
+                <a href="#" class="nav-link" data-filter="paused">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                    <span>Paused</span>
+                    <span class="nav-badge" id="countPaused">0</span>
+                </a>
+                
+                <div class="nav-section-title">Categories</div>
+                <a href="#" class="nav-link" data-category="video">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                    <span>Videos & Streams</span>
+                </a>
+                <a href="#" class="nav-link" data-category="compressed">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    <span>Compressed (ZIP/ISO)</span>
+                </a>
+                <a href="#" class="nav-link" data-category="programs">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+                    <span>Programs (EXE/APK)</span>
+                </a>
+                <a href="#" class="nav-link" data-category="documents">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-link" data-category="audio">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <span>Music & Audio</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="plan-badge">Turbo Engine Active</div>
+                <button class="icon-button" id="collapseBtn" aria-label="Collapse sidebar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 2. Workspace (Center 1fr) -->
+        <main class="workspace">
+            <!-- Breadcrumb bar (collapses on scroll) -->
+            <div class="workspace-breadcrumb" id="breadcrumbBar">
+                <nav class="breadcrumb">
+                    <a href="#" class="breadcrumb__link">Home</a>
+                    <svg class="breadcrumb__separator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    <a href="#" class="breadcrumb__link">Download Manager</a>
+                    <svg class="breadcrumb__separator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                    <span class="breadcrumb__current" id="currentViewName">All Downloads</span>
+                </nav>
+            </div>
+
+            <!-- Header (sticky, collapses on scroll) -->
+            <header class="workspace-header" id="workspaceHeader">
+                <div class="header-content">
+                    <div>
+                        <h1>Download Hub <span class="subtitle-counter" id="headerSubtitle">0 active tasks</span></h1>
+                    </div>
+                    <div class="header-speed-meter">
+                        <div class="speed-label">CURRENT DOWNLOAD SPEED</div>
+                        <div class="speed-value" id="globalSpeedText">0.0 KB/s</div>
+                    </div>
+                </div>
+                <div class="tabs" id="statusTabs">
+                    <button class="tab active" data-filter="all">All Tasks</button>
+                    <button class="tab" data-filter="downloading">Downloading</button>
+                    <button class="tab" data-filter="completed">Completed</button>
+                    <button class="tab" data-filter="paused">Paused</button>
+                </div>
+            </header>
+
+            <div class="workspace-content" id="workspaceContent">
+                <!-- Stats Overview Row -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <span class="metric-card__title">TOTAL BANDWIDTH</span>
+                            <div class="metric-card__icon metric-card__icon--blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card__value" id="statSpeed">0.00 MB/s</div>
+                        <div class="metric-card__sub">Peak Multi-threading Enabled</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <span class="metric-card__title">ACTIVE THREADS</span>
+                            <div class="metric-card__icon metric-card__icon--green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card__value" id="statThreads">0 Chunks</div>
+                        <div class="metric-card__sub" id="statActiveTasks">0 Tasks downloading</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card__header">
+                            <span class="metric-card__title">FILES PROCESSED</span>
+                            <div class="metric-card__icon metric-card__icon--purple">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card__value" id="statCompleted">0 / 0</div>
+                        <div class="metric-card__sub">100% Integrity verified</div>
+                    </div>
+                </div>
+
+                <!-- Main Content Table Card -->
+                <div class="table-card">
+                    <div class="toolbar">
+                        <div class="toolbar__left">
+                            <div class="search-input-wrapper">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="downloadSearch" placeholder="Filter by file name or URL...">
+                            </div>
+                        </div>
+                        <div class="toolbar__actions">
+                            <button class="btn btn-secondary" id="resumeAllBtn" title="Resume all paused downloads">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Resume All
+                            </button>
+                            <button class="btn btn-secondary" id="pauseAllBtn" title="Pause all active downloads">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                                Pause All
+                            </button>
+                            <button class="btn btn-secondary" id="clearCompletedBtn" title="Remove finished items">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Clear Finished
+                            </button>
+                            <button class="btn btn-primary" id="addDownloadBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                Add Download URL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Downloads Table -->
+                    <div class="table-container">
+                        <table class="download-table">
+                            <thead>
+                                <tr>
+                                    <th>FILE & CATEGORY</th>
+                                    <th>SIZE</th>
+                                    <th>PROGRESS & MULTI-CHUNKS</th>
+                                    <th>SPEED</th>
+                                    <th>ETA</th>
+                                    <th>STATUS</th>
+                                    <th class="text-right">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="downloadsTableBody">
+                                <!-- Injected by app.js -->
+                            </tbody>
+                        </table>
+
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyState" style="display: none;">
+                            <div class="empty-state__icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </div>
+                            <h3>No downloads found</h3>
+                            <p>Click "Add Download URL" or paste any direct link / video stream to start accelerating.</p>
+                            <button class="btn btn-primary" id="emptyAddBtn">+ Add New Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 3. Utility Rail (Right 52px - MANDATORY) -->
+        <aside class="utility-rail">
+            <div class="avatar" title="User Profile (NDM Admin)">
+                <span>ND</span>
+                <span class="online-dot" title="Online & Synchronized"></span>
+            </div>
+
+            <button class="utility-rail__btn" id="sniffClipboardBtn" title="Auto Clipboard Sniffer: Active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                <span class="pulse-dot"></span>
+            </button>
+
+            <button class="utility-rail__btn" id="extensionInfoBtn" title="Browser Extension Ready">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+
+            <div class="utility-rail__separator"></div>
+
+            <button class="utility-rail__btn" id="themeToggleBtn" title="Toggle Dark / Light Mode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+
+            <button class="utility-rail__btn" id="settingsBtn" title="Preferences & Thread Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+        </aside>
+    </div>
+
+    <!-- MODAL 1: ADD DOWNLOAD -->
+    <div class="modal" id="addModal">
+        <div class="modal__backdrop" id="addModalBackdrop"></div>
+        <div class="modal__dialog">
+            <div class="modal__header">
+                <h2>Add Download URL</h2>
+                <button class="icon-button" id="closeAddModalBtn" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="addDownloadForm" class="modal__body">
+                <div class="form-group">
+                    <label for="downloadUrlInput">Download Link (HTTP, HTTPS, YouTube, Stream)</label>
+                    <div class="input-action-wrapper">
+                        <input type="url" id="downloadUrlInput" required placeholder="https://example.com/file.zip or YouTube URL">
+                        <button type="button" class="btn btn-secondary btn-sm" id="probeBtn">Probe Link</button>
+                    </div>
+                </div>
+
+                <div id="probeResultBanner" class="probe-info is-hidden">
+                    <div class="probe-info__row">
+                        <span>Status / Type:</span> <strong id="probeRanges">--</strong>
+                    </div>
+                    <div class="probe-info__row" id="probeSizeRow">
+                        <span>File Size:</span> <strong id="probeSize">--</strong>
+                    </div>
+                    <div class="probe-info__row">
+                        <span>Category:</span> <strong id="probeCat">--</strong>
+                    </div>
+                </div>
+
+                <!-- Video Quality Row (Shows when Video URL is detected) -->
+                <div class="form-group" id="videoQualityGroup" style="display: none;">
+                    <label for="videoQualitySelect">🎬 Select Video Quality</label>
+                    <select id="videoQualitySelect">
+                        <option value="bestvideo[height<=1080]+bestaudio/best">1080p Full HD (MP4)</option>
+                        <option value="bestvideo[height<=720]+bestaudio/best">720p HD (MP4)</option>
+                        <option value="bestvideo[height<=480]+bestaudio/best">480p (MP4)</option>
+                        <option value="bestvideo[height<=360]+bestaudio/best">360p (MP4)</option>
+                        <option value="audio_mp3">🎵 Audio Only (MP3)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="filenameInput">Save As (Filename)</label>
+                    <input type="text" id="filenameInput" placeholder="Auto-extracted from URL">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group form-col">
+                        <label for="threadSelect">Acceleration Threads (Concurrent Chunks)</label>
+                        <select id="threadSelect">
+                            <option value="4">4 Chunks (Light)</option>
+                            <option value="8" selected>8 Chunks (Recommended)</option>
+                            <option value="16">16 Chunks (Turbo IDM Speed)</option>
+                            <option value="32">32 Chunks (Ultra Bandwidth)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group form-col">
+                        <label for="categorySelect">Category</label>
+                        <select id="categorySelect">
+                            <option value="">Auto-Detect</option>
+                            <option value="video">🎬 Videos</option>
+                            <option value="compressed">📦 Compressed</option>
+                            <option value="programs">💻 Programs</option>
+                            <option value="documents">📄 Documents</option>
+                            <option value="audio">🎵 Music</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="startImmediatelyCheck" checked>
+                        <span>Start download immediately</span>
+                    </label>
+                </div>
+
+                <div class="modal__footer">
+                    <button type="button" class="btn btn-secondary" id="cancelAddBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitAddBtn">Start Download</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CHUNK MAP & TASK DETAILS -->
+    <div class="modal" id="detailsModal">
+        <div class="modal__backdrop" id="detailsModalBackdrop"></div>
+        <div class="modal__dialog modal__dialog--large">
+            <div class="modal__header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <h2 id="detailsFileName" style="margin: 0;">Task Details</h2>
+                        <span class="status-badge" id="detailsStatusBadge">completed</span>
+                    </div>
+                    <span class="subtitle-counter" id="detailsUrlText" style="word-break: break-all;">--</span>
+                </div>
+                <button class="icon-button" id="closeDetailsBtn" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal__body">
+                <!-- Location Path Card -->
+                <div class="file-destination-card" style="display: flex; align-items: center; justify-content: space-between; background: hsl(0, 0%, 12%); border: 1px solid hsl(0, 0%, 20%); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="hsl(218, 89%, 73%)" stroke-width="2" style="width: 20px; height: 20px; flex-shrink: 0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        <span id="detailsSavePath" style="font-family: var(--font-mono); font-size: 0.82rem; color: hsl(0, 0%, 85%); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">C:\Users\DELL\Downloads\...</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                        <button class="btn btn-secondary" id="detailsFolderBtn" style="padding: 4px 10px; font-size: 0.75rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            📁 Show in Folder
+                        </button>
+                        <button class="btn btn-primary" id="detailsPlayBtn" style="padding: 4px 12px; font-size: 0.75rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            ▶ Play / Open
+                        </button>
+                    </div>
+                </div>
+
+                <div class="details-summary-grid">
+                    <div class="detail-item">
+                        <span class="detail-item__label">Total File Size</span>
+                        <span class="detail-item__val" id="detailsTotalSize">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item__label">Downloaded</span>
+                        <span class="detail-item__val" id="detailsDownloaded">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item__label">Live Speed</span>
+                        <span class="detail-item__val" id="detailsSpeed">--</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item__label">Threads Active</span>
+                        <span class="detail-item__val" id="detailsThreads">--</span>
+                    </div>
+                </div>
+
+                <h3 class="section-sub-title">Live Multi-Part Chunk Segments (IDM Real-Time Map)</h3>
+                <div class="chunk-grid" id="chunkGridContainer">
+                    <!-- Injected chunks -->
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn-secondary" id="closeDetailsFooterBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: EXTENSION HELPER -->
+    <div class="modal" id="extensionModal">
+        <div class="modal__backdrop" id="extensionModalBackdrop"></div>
+        <div class="modal__dialog">
+            <div class="modal__header">
+                <h2>Browser Extension & Video Sniffer</h2>
+                <button class="icon-button" id="closeExtensionBtn" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal__body">
+                <p>To enable the floating <strong>"Download This Video"</strong> button on YouTube & Facebook:</p>
+                <ol class="setup-list">
+                    <li>Open <code>chrome://extensions</code> in your browser.</li>
+                    <li>Find <strong>Nitro DM</strong> and click the 🔄 <strong>Refresh icon</strong> (or Load unpacked).</li>
+                    <li>Folder path: <br><code>c:\Users\DELL\Desktop\NBrain\subdomains\idm\extension</code></li>
+                    <li>Open any YouTube video — the floating <strong>Download Video (NDM)</strong> button will appear at the top-right!</li>
+                </ol>
+                <div class="alert-tip">
+                    ⚡ Supports 1080p, 720p, 480p, and MP3 audio downloads with accelerated multi-streams!
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button type="button" class="btn btn-primary" id="closeExtensionFooterBtn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM RIGHT TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

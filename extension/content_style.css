@@ -1,0 +1,218 @@
+/* Nitro DM - Floating In-Page Sniffer UI */
+
+.ndm-sniff-container {
+    position: fixed;
+    top: 68px;
+    right: 24px;
+    z-index: 2147483647 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ndm-sniff-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: hsl(218, 89%, 73%) !important;
+    color: hsl(0, 0%, 7%) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 16px hsla(0, 0%, 0%, 0.4), 0 0 10px hsla(218, 89%, 73%, 0.5) !important;
+    transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.ndm-sniff-btn:hover {
+    transform: scale(1.05) !important;
+    background: hsl(218, 95%, 80%) !important;
+}
+
+.ndm-sniff-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.ndm-dropdown {
+    position: absolute;
+    top: 42px;
+    right: 0;
+    width: 280px;
+    background: hsl(0, 0%, 13%);
+    border: 1px solid hsl(215, 7%, 33%);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px hsla(0, 0%, 0%, 0.6);
+    overflow: hidden;
+    color: hsl(216, 12%, 92%);
+    z-index: 2147483647 !important;
+}
+
+.ndm-dropdown.is-hidden {
+    display: none !important;
+}
+
+.ndm-dropdown-header {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: hsl(218, 89%, 73%);
+    border-bottom: 1px solid hsl(214, 5%, 25%);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: hsl(0, 0%, 9%);
+}
+
+.ndm-dropdown-list {
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.ndm-quality-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: none;
+    border: none;
+    color: hsl(216, 12%, 92%);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.ndm-quality-item:hover {
+    background: hsl(214, 53%, 26%);
+    color: hsl(218, 89%, 73%);
+}
+
+.ndm-quality-item svg {
+    width: 14px;
+    height: 14px;
+}
+
+.ndm-loading, .ndm-error {
+    padding: 14px;
+    font-size: 12px;
+    text-align: center;
+    color: hsl(0, 0%, 65%);
+}
+
+/* Interactive Floating Download Card in Webpages */
+.ndm-toast-card {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    width: 340px !important;
+    background: hsl(0, 0%, 11%) !important;
+    border: 1px solid hsl(218, 89%, 73%, 0.5) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 40px hsla(0, 0%, 0%, 0.8), 0 0 20px hsla(218, 89%, 73%, 0.25) !important;
+    overflow: hidden !important;
+    z-index: 2147483647 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    color: hsl(0, 0%, 95%) !important;
+    animation: ndmSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: transform 0.25s ease, opacity 0.25s ease !important;
+}
+
+.ndm-toast-card.is-hiding {
+    transform: translateX(120%) !important;
+    opacity: 0 !important;
+}
+
+@keyframes ndmSlideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.ndm-toast-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: hsl(0, 0%, 14%);
+    border-bottom: 1px solid hsl(0, 0%, 20%);
+    font-size: 12px;
+    font-weight: 700;
+    color: hsl(140, 37%, 65%);
+}
+
+.ndm-toast-card__close {
+    background: none;
+    border: none;
+    color: hsl(0, 0%, 60%);
+    cursor: pointer;
+    padding: 2px;
+    font-size: 14px;
+}
+
+.ndm-toast-card__close:hover {
+    color: hsl(0, 0%, 95%);
+}
+
+.ndm-toast-card__body {
+    padding: 12px 14px;
+}
+
+.ndm-toast-card__title {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    margin-bottom: 4px;
+    color: hsl(0, 0%, 95%);
+}
+
+.ndm-toast-card__sub {
+    font-size: 11px;
+    color: hsl(0, 0%, 60%);
+}
+
+.ndm-toast-card__actions {
+    padding: 8px 14px 12px 14px;
+    display: flex;
+    gap: 8px;
+}
+
+.ndm-btn-primary {
+    flex: 1;
+    background: hsl(218, 89%, 73%) !important;
+    color: hsl(0, 0%, 7%) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.ndm-btn-secondary {
+    flex: 1;
+    background: hsl(0, 0%, 18%) !important;
+    color: hsl(0, 0%, 90%) !important;
+    border: 1px solid hsl(0, 0%, 26%) !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
