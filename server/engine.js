@@ -692,7 +692,14 @@ class DownloadEngine extends EventEmitter {
         const { spawn, exec } = require('child_process');
 
         if (fileExists) {
-            // Highlight and select the exact file in Windows Explorer
+            // Method 1: Windows CMD Shell explorer with /select
+            try {
+                exec(`cmd /c explorer /select,"${targetFile}"`);
+            } catch (err) {
+                console.error('[NDM openFileFolder] cmd exec error:', err.message);
+            }
+
+            // Method 2: Detached explorer.exe spawn with verbatim /select
             try {
                 const child = spawn('explorer.exe', [`/select,"${targetFile}"`], {
                     windowsVerbatimArguments: true,
@@ -702,18 +709,16 @@ class DownloadEngine extends EventEmitter {
                 child.unref();
             } catch (err) {
                 console.error('[NDM openFileFolder] select spawn error:', err.message);
-                try { exec(`start "" "${folder}"`); } catch (_) {}
             }
         } else {
-            // Fallback to opening folder if file was moved or deleted
+            // Fallback: Open folder
             try {
-                const child = spawn('explorer.exe', [folder], {
-                    detached: true,
-                    stdio: 'ignore'
-                });
-                child.unref();
+                exec(`start "" "${folder}"`);
             } catch (_) {
-                try { exec(`start "" "${folder}"`); } catch (_) {}
+                try {
+                    const child = spawn('explorer.exe', [folder], { detached: true, stdio: 'ignore' });
+                    child.unref();
+                } catch (_) {}
             }
         }
 
