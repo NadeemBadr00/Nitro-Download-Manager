@@ -597,30 +597,37 @@ class DownloadEngine extends EventEmitter {
         }
         
         const targetFile = this.resolveTaskPath(task);
-        const folder = (targetFile && fs.existsSync(targetFile)) 
-            ? path.dirname(targetFile) 
-            : this.downloadDir;
+        const fileExists = targetFile && fs.existsSync(targetFile);
+        const folder = fileExists ? path.dirname(targetFile) : this.downloadDir;
 
-        console.log(`[NDM openFileFolder] Task: ${taskId}, Opening folder: "${folder}"`);
+        console.log(`[NDM openFileFolder] Task: ${taskId}, File: "${targetFile}", Exists: ${fileExists}`);
 
-        const { exec, spawn } = require('child_process');
+        const { spawn, exec } = require('child_process');
 
-        // Method 1: Detached top-level explorer spawn
-        try {
-            const child = spawn('explorer.exe', [folder], {
-                detached: true,
-                stdio: 'ignore'
-            });
-            child.unref();
-        } catch (err) {
-            console.error('[NDM openFileFolder] spawn error:', err.message);
-        }
-
-        // Method 2: Windows Shell start command
-        try {
-            exec(`start "" "${folder}"`);
-        } catch (err) {
-            console.error('[NDM openFileFolder] exec start error:', err.message);
+        if (fileExists) {
+            // Highlight and select the exact file in Windows Explorer
+            try {
+                const child = spawn('explorer.exe', [`/select,"${targetFile}"`], {
+                    windowsVerbatimArguments: true,
+                    detached: true,
+                    stdio: 'ignore'
+                });
+                child.unref();
+            } catch (err) {
+                console.error('[NDM openFileFolder] select spawn error:', err.message);
+                try { exec(`start "" "${folder}"`); } catch (_) {}
+            }
+        } else {
+            // Fallback to opening folder if file was moved or deleted
+            try {
+                const child = spawn('explorer.exe', [folder], {
+                    detached: true,
+                    stdio: 'ignore'
+                });
+                child.unref();
+            } catch (_) {
+                try { exec(`start "" "${folder}"`); } catch (_) {}
+            }
         }
 
         return true;
