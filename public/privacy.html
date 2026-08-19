@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Nitro Download Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: hsl(222, 47%, 7%);
+            --card-bg: hsl(217, 33%, 12%);
+            --text-main: hsl(210, 40%, 98%);
+            --text-muted: hsl(215, 20%, 65%);
+            --primary: hsl(199, 89%, 48%);
+            --border: hsl(217, 33%, 20%);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); line-height: 1.6; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--border); }
+        h1 { font-size: 2rem; color: var(--primary); margin-bottom: 8px; }
+        .meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        h2 { font-size: 1.3rem; margin: 24px 0 12px; color: var(--text-main); }
+        p { color: var(--text-muted); margin-bottom: 16px; }
+        ul { margin-left: 20px; color: var(--text-muted); margin-bottom: 16px; }
+        li { margin-bottom: 8px; }
+        .badge { display: inline-block; background: hsla(199, 89%, 48%, 0.15); color: var(--primary); padding: 4px 12px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="badge">Official Policy</span>
+        <h1>Privacy Policy for Nitro Download Manager</h1>
+        <div class="meta">Last Updated: August 19, 2026 | Publisher: Nadeem Badr (nbra.in)</div>
+
+        <h2>1. Overview</h2>
+        <p>Nitro Download Manager ("NDM", "we", "our") is committed to protecting your privacy. This Privacy Policy explains how our Chrome Extension and desktop software handle user information.</p>
+
+        <h2>2. Data Collection and Usage</h2>
+        <p><strong>We do not collect, transmit, store, or sell any personal user data.</strong></p>
+        <ul>
+            <li><strong>No Analytics or Tracking:</strong> The extension contains zero tracking pixels, telemetry, or third-party analytics SDKs.</li>
+            <li><strong>No Remote Server Logging:</strong> All file downloading, video stream detection, and acceleration algorithms execute 100% locally on your own machine.</li>
+            <li><strong>No Browsing History Stored:</strong> URLs detected by the video sniffer are processed in volatile memory only to fetch stream quality manifests.</li>
+        </ul>
+
+        <h2>3. Chrome Extension Permissions Justification</h2>
+        <ul>
+            <li><code>downloads</code>: Required strictly to intercept browser downloads and facilitate multi-threaded chunked downloads.</li>
+            <li><code>storage</code>: Used solely to save your local UI preferences (e.g. speed limiter, notification toggles, theme) in your local browser storage.</li>
+            <li><code>contextMenus</code>: Enables the right-click "Download with Nitro DM" option on links and media files.</li>
+            <li><code>host_permissions</code>: Needed to communicate with the local Nitro DM background engine at <code>http://localhost:3000</code> and parse media streams on supported web pages.</li>
+        </ul>
+
+        <h2>4. Data Security</h2>
+        <p>Because all operations run locally, your download history and preferences remain on your local computer at all times.</p>
+
+        <h2>5. Contact & Support</h2>
+        <p>If you have any questions regarding this Privacy Policy, please contact:</p>
+        <p><strong>Developer:</strong> Nadeem Badr<br>
+        <strong>Email:</strong> <a href="mailto:nadeem@nbra.in">nadeem@nbra.in</a> / <a href="mailto:gcode4306@gmail.com">gcode4306@gmail.com</a><br>
+        <strong>Website:</strong> <a href="https://idm.nbra.in">https://idm.nbra.in</a></p>
+    </div>
+</body>
+</html>

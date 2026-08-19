@@ -745,9 +745,42 @@
     ],
     "speed": 0,
     "eta": 0,
-    "lastBytes": 33079,
+    "lastBytes": 184762,
     "createdAt": "2026-08-19T10:33:26.280Z",
     "completedAt": "2026-08-19T10:33:27.494Z",
+    "error": null
+  },
+  {
+    "id": "3a7818e2b98a8ab6",
+    "url": "https://www.linkedin.com/feed/update/urn:li:activity:7490443995035320320/",
+    "filename": "#computervision #opencv #mediapipe #python _ Nadeem Badr _ 30 comments.mp4",
+    "savePath": "C:\\Users\\DELL\\Downloads\\#computervision #opencv #mediapipe #python _ Nadeem Badr _ 30 comments.mp4",
+    "totalBytes": 7001716,
+    "downloadedBytes": 7001716,
+    "status": "completed",
+    "threads": 16,
+    "acceptRanges": true,
+    "contentType": "video/mp4",
+    "category": "video",
+    "isVideoStream": true,
+    "videoFormat": "bestvideo[height<=360]+bestaudio/best[height<=360]/best",
+    "isAudio": false,
+    "thumbnail": "https://dms.licdn.com/playlist/vid/v2/D4D05AQF_p0SuosPJwA/thumbnail-with-play-button-overlay-high/B4DZ.5PcOqJ8C0-/0/1785519267923?e=2147483647&v=beta&t=71rgDhNai-yXuuALiJfKUxiEkuTLnKAaPzJbmV6HYFw",
+    "chunks": [
+      {
+        "id": 0,
+        "start": 0,
+        "end": 0,
+        "total": 0,
+        "downloaded": 0,
+        "status": "pending"
+      }
+    ],
+    "speed": 0,
+    "eta": 0,
+    "lastBytes": 0,
+    "createdAt": "2026-08-19T10:47:02.043Z",
+    "completedAt": "2026-08-19T10:47:06.780Z",
     "error": null
   }
 ]
