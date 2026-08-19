@@ -589,28 +589,21 @@ class DownloadEngine extends EventEmitter {
         return targetFile;
     }
 
-    runVbsAction(vbsCode, label) {
-        const os = require('os');
-        const { exec } = require('child_process');
-        const tmpVbs = path.join(os.tmpdir(), `ndm_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.vbs`);
-        
-        // VBScript saved as UTF-16LE with BOM for full Unicode (Arabic + Emoji) support
-        const bom = Buffer.from([0xFF, 0xFE]);
-        const content = Buffer.from(vbsCode, 'utf16le');
-        fs.writeFileSync(tmpVbs, Buffer.concat([bom, content]));
-        
-        console.log(`[NDM ${label}] Executing VBS: ${tmpVbs}`);
-        
-        exec(`wscript.exe "${tmpVbs}"`, { windowsHide: false }, (err, stdout, stderr) => {
-            if (err) {
-                console.error(`[NDM ${label}] VBS ERROR:`, err.message);
-            } else {
-                console.log(`[NDM ${label}] VBS executed OK`);
-            }
-            if (stderr) console.error(`[NDM ${label}] stderr:`, stderr);
-            setTimeout(() => {
-                try { fs.unlinkSync(tmpVbs); } catch (_) {}
-            }, 3000);
+    runWinHelper(action, targetPath, label) {
+        const helperPath = path.join(__dirname, 'win_helper.py');
+        const { spawn } = require('child_process');
+
+        console.log(`[NDM ${label}] Invoking win_helper: ${action} for "${targetPath}"`);
+
+        const child = spawn('python', [helperPath, action, targetPath], {
+            windowsHide: false,
+            env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+        });
+
+        child.stdout.on('data', data => console.log(`[NDM ${label} stdout]`, data.toString('utf-8').trim()));
+        child.stderr.on('data', data => console.error(`[NDM ${label} stderr]`, data.toString('utf-8').trim()));
+        child.on('close', code => {
+            console.log(`[NDM ${label}] win_helper exited with code:`, code);
         });
     }
 
@@ -621,26 +614,10 @@ class DownloadEngine extends EventEmitter {
             return false;
         }
         
-        const targetFile = this.resolveTaskPath(task);
-        console.log(`[NDM openFileFolder] Task: ${taskId}, Exists: ${targetFile ? fs.existsSync(targetFile) : false}`);
+        const targetFile = this.resolveTaskPath(task) || this.downloadDir;
+        console.log(`[NDM openFileFolder] Task: ${taskId}, Target: "${targetFile}", Exists: ${fs.existsSync(targetFile)}`);
 
-        if (targetFile && fs.existsSync(targetFile)) {
-            const escaped = targetFile.replace(/"/g, '""');
-            const vbs = [
-                'Set WshShell = WScript.CreateObject("WScript.Shell")',
-                `WshShell.Run "explorer.exe /select,""${escaped}""", 1, False`,
-                'Set WshShell = Nothing'
-            ].join('\r\n');
-            this.runVbsAction(vbs, 'ShowInFolder');
-        } else {
-            const escaped = this.downloadDir.replace(/"/g, '""');
-            const vbs = [
-                'Set WshShell = WScript.CreateObject("WScript.Shell")',
-                `WshShell.Run "explorer.exe ""${escaped}""", 1, False`,
-                'Set WshShell = Nothing'
-            ].join('\r\n');
-            this.runVbsAction(vbs, 'ShowInFolder-fallback');
-        }
+        this.runWinHelper('--folder', targetFile, 'ShowInFolder');
         return true;
     }
 
@@ -652,17 +629,11 @@ class DownloadEngine extends EventEmitter {
         }
 
         const targetFile = this.resolveTaskPath(task);
-        console.log(`[NDM openFile] Task: ${taskId}, Exists: ${targetFile ? fs.existsSync(targetFile) : false}`);
+        console.log(`[NDM openFile] Task: ${taskId}, Target: "${targetFile}", Exists: ${targetFile ? fs.existsSync(targetFile) : false}`);
 
         if (!targetFile || !fs.existsSync(targetFile)) return false;
 
-        const escaped = targetFile.replace(/"/g, '""');
-        const vbs = [
-            'Set WshShell = WScript.CreateObject("WScript.Shell")',
-            `WshShell.Run """${escaped}""", 1, False`,
-            'Set WshShell = Nothing'
-        ].join('\r\n');
-        this.runVbsAction(vbs, 'PlayFile');
+        this.runWinHelper('--file', targetFile, 'PlayFile');
         return true;
     }
 
