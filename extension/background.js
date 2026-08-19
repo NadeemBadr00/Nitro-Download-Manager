@@ -10,10 +10,16 @@ let isFirstCheck = true;
 
 // Context menu for right-clicking any link or media
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-        id: 'ndm-download-link',
-        title: '⚡ Download with Nitro DM (Turbo Multi-Chunk)',
-        contexts: ['link', 'image', 'video', 'audio']
+    chrome.contextMenus.removeAll(() => {
+        chrome.contextMenus.create({
+            id: 'ndm-download-link',
+            title: '⚡ Download with Nitro DM (Turbo Multi-Chunk)',
+            contexts: ['link', 'image', 'video', 'audio']
+        }, () => {
+            if (chrome.runtime.lastError) {
+                // Silence duplicate item warnings
+            }
+        });
     });
 });
 
