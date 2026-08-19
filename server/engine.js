@@ -589,24 +589,6 @@ class DownloadEngine extends EventEmitter {
         return targetFile;
     }
 
-    runWinHelper(action, targetPath, label) {
-        const helperPath = path.join(__dirname, 'win_helper.py');
-        const { spawn } = require('child_process');
-
-        console.log(`[NDM ${label}] Invoking win_helper: ${action} for "${targetPath}"`);
-
-        const child = spawn('python', [helperPath, action, targetPath], {
-            windowsHide: false,
-            env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
-        });
-
-        child.stdout.on('data', data => console.log(`[NDM ${label} stdout]`, data.toString('utf-8').trim()));
-        child.stderr.on('data', data => console.error(`[NDM ${label} stderr]`, data.toString('utf-8').trim()));
-        child.on('close', code => {
-            console.log(`[NDM ${label}] win_helper exited with code:`, code);
-        });
-    }
-
     openFileFolder(taskId) {
         const task = this.tasks.get(taskId);
         if (!task) {
@@ -614,10 +596,33 @@ class DownloadEngine extends EventEmitter {
             return false;
         }
         
-        const targetFile = this.resolveTaskPath(task) || this.downloadDir;
-        console.log(`[NDM openFileFolder] Task: ${taskId}, Target: "${targetFile}", Exists: ${fs.existsSync(targetFile)}`);
+        const targetFile = this.resolveTaskPath(task);
+        const folder = (targetFile && fs.existsSync(targetFile)) 
+            ? path.dirname(targetFile) 
+            : this.downloadDir;
 
-        this.runWinHelper('--folder', targetFile, 'ShowInFolder');
+        console.log(`[NDM openFileFolder] Task: ${taskId}, Opening folder: "${folder}"`);
+
+        const { exec, spawn } = require('child_process');
+
+        // Method 1: Detached top-level explorer spawn
+        try {
+            const child = spawn('explorer.exe', [folder], {
+                detached: true,
+                stdio: 'ignore'
+            });
+            child.unref();
+        } catch (err) {
+            console.error('[NDM openFileFolder] spawn error:', err.message);
+        }
+
+        // Method 2: Windows Shell start command
+        try {
+            exec(`start "" "${folder}"`);
+        } catch (err) {
+            console.error('[NDM openFileFolder] exec start error:', err.message);
+        }
+
         return true;
     }
 
@@ -633,7 +638,8 @@ class DownloadEngine extends EventEmitter {
 
         if (!targetFile || !fs.existsSync(targetFile)) return false;
 
-        this.runWinHelper('--file', targetFile, 'PlayFile');
+        const { exec } = require('child_process');
+        exec(`start "" "${targetFile}"`);
         return true;
     }
 
